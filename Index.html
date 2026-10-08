@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AutoVault — The Car Encyclopedia</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#07090d;color:#f4f7fb}
+:root{--card:#10141b;--muted:#9da8b7;--line:#252c36;--accent:#ff5a36;--accent2:#ff8a3d}
+header{position:sticky;top:0;z-index:20;background:rgba(7,9,13,.88);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.nav{max-width:1250px;margin:auto;padding:16px 22px;display:flex;align-items:center;justify-content:space-between;gap:15px}
+.logo{font-size:22px;font-weight:900;letter-spacing:-1px}.logo span{color:var(--accent)}
+.nav small{color:var(--muted)}
+.hero{max-width:1250px;margin:0 auto;padding:70px 22px 35px;text-align:center}
+.hero h1{font-size:clamp(40px,7vw,78px);line-height:.95;margin:0 0 18px;letter-spacing:-4px}
+.hero h1 span{color:var(--accent)}
+.hero p{max-width:700px;margin:auto;color:var(--muted);font-size:17px;line-height:1.6}
+.searchbox{max-width:760px;margin:30px auto 0;display:flex;background:#11161e;border:1px solid #303844;border-radius:16px;padding:7px}
+.searchbox input{flex:1;background:transparent;border:0;outline:0;color:white;padding:14px;font-size:16px}
+.searchbox button,.btn{border:0;background:var(--accent);color:white;font-weight:800;padding:13px 18px;border-radius:11px;cursor:pointer}
+.stats{max-width:1250px;margin:15px auto 35px;padding:0 22px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.stat{background:var(--card);border:1px solid var(--line);padding:18px;border-radius:14px}.stat b{font-size:25px}.stat span{display:block;color:var(--muted);font-size:12px;margin-top:5px}
+.controls{max-width:1250px;margin:auto;padding:0 22px 20px;display:flex;gap:10px;flex-wrap:wrap}
+select,.filterbtn{background:#10141b;border:1px solid var(--line);color:#eaf0f7;padding:11px 13px;border-radius:10px}
+.section{max-width:1250px;margin:auto;padding:10px 22px 50px}
+.section-title{display:flex;align-items:end;justify-content:space-between;margin:12px 0 18px}.section-title h2{margin:0;font-size:28px}.section-title p{margin:0;color:var(--muted);font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}
+.car{background:var(--card);border:1px solid var(--line);border-radius:17px;overflow:hidden;transition:.2s;cursor:pointer}
+.car:hover{transform:translateY(-4px);border-color:#4a5564}
+.visual{height:145px;display:flex;align-items:center;justify-content:center;font-size:62px;background:radial-gradient(circle at 50% 45%,#242b35,#0d1015 65%);overflow:hidden}.visual img{width:100%;height:100%;object-fit:cover;display:block}.photo-fallback{font-size:62px}
+.carbody{padding:16px}.brand{color:var(--accent2);font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px}
+.car h3{margin:6px 0;font-size:19px}.meta{display:flex;gap:6px;flex-wrap:wrap;margin:9px 0}.tag{background:#1a2029;color:#c9d1dc;padding:5px 8px;border-radius:7px;font-size:10px}
+.price{font-weight:900;margin-top:12px}.price small{color:var(--muted);font-weight:500}
+.empty{display:none;text-align:center;padding:50px;color:var(--muted);grid-column:1/-1}
+footer{border-top:1px solid var(--line);padding:35px 22px;color:var(--muted);text-align:center;font-size:13px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}.modal.show{display:flex}
+.dialog{max-width:650px;width:100%;background:#10141b;border:1px solid #303844;border-radius:20px;padding:25px;max-height:90vh;overflow:auto}.close{float:right;background:none;border:0;color:white;font-size:25px;cursor:pointer}
+.detailhero{font-size:75px;text-align:center;padding:25px;background:radial-gradient(circle,#252d38,#0c0f14);border-radius:14px;margin:12px 0}
+.specs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:15px}.spec{background:#171c24;padding:12px;border-radius:9px}.spec b{display:block;font-size:11px;color:var(--muted);margin-bottom:4px}
+@media(max-width:900px){.grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:650px){.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:repeat(2,1fr)}.hero{padding-top:45px}.hero h1{letter-spacing:-2px}.nav small{display:none}}
+@media(max-width:430px){.grid{grid-template-columns:1fr}.searchbox button{padding:11px}.stats{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header><div class="nav"><div class="logo">AUTO<span>VAULT</span></div><small>Explore the world of cars</small></div></header>
+
+<main>
+<section class="hero">
+<h1>Every Car.<br><span>One Garage.</span></h1>
+<p>Explore cars from city hatchbacks and family SUVs to supercars, electric vehicles, luxury sedans and legendary off-roaders.</p>
+<div class="searchbox"><input id="search" placeholder="Search a car, brand, type or fuel…"><button onclick="render()">Search</button></div>
+</section>
+
+<div class="stats">
+<div class="stat"><b id="count">0</b><span>Cars in database</span></div>
+<div class="stat"><b id="brands">0</b><span>Brands</span></div>
+<div class="stat"><b>12+</b><span>Car categories</span></div>
+<div class="stat"><b>∞</b><span>More to discover</span></div>
+</div>
+
+<div class="controls">
+<select id="type" onchange="render()"><option value="">All types</option><option>SUV</option><option>Sedan</option><option>Hatchback</option><option>Sports</option><option>Supercar</option><option>Hypercar</option><option>Pickup</option><option>MPV</option><option>Coupe</option><option>Convertible</option><option>Wagon</option><option>EV</option></select>
+<select id="fuel" onchange="render()"><option value="">All powertrains</option><option>Petrol</option><option>Diesel</option><option>Hybrid</option><option>Electric</option></select>
+<select id="sort" onchange="render()"><option value="name">Sort: Name</option><option value="brand">Sort: Brand</option><option value="price">Sort: Price</option></select>
+<button class="filterbtn" onclick="resetFilters()">Reset filters</button>
+</div>
+
+<section class="section">
+<div class="section-title"><h2>Car collection</h2><p id="shown"></p></div>
+<div class="grid" id="grid"></div>
+<div class="empty" id="empty">No cars found. Try another search or filter.</div>
+</section>
+</main>
+
+<div class="modal" id="modal" onclick="if(event.target===this)closeModal()">
+<div class="dialog"><button class="close" onclick="closeModal()">×</button><div id="details"></div></div>
+</div>
+
+<footer>AutoVault • A fan-made educational car encyclopedia • <strong>Big by Rizza</strong></footer>
+
+<script>
+const cars=[
+["Toyota","Fortuner","SUV","Diesel","₹33L","⛰️","2.8L","204 hp","4x4","7 seats"],
+["Toyota","Innova HyCross","MPV","Hybrid","₹20L","🚐","2.0L","186 hp","FWD","7 seats"],
+["Toyota","Camry","Sedan","Hybrid","₹47L","🚘","2.5L","227 hp","FWD","5 seats"],
+["Toyota","Land Cruiser","SUV","Diesel","₹2.1Cr","🏔️","3.3L","304 hp","4x4","7 seats"],
+["Toyota","Supra","Sports","Petrol","₹85L","🏎️","3.0L","382 hp","RWD","2 seats"],
+["Maruti Suzuki","Swift","Hatchback","Petrol","₹6L","🚗","1.2L","82 hp","FWD","5 seats"],
+["Maruti Suzuki","Baleno","Hatchback","Petrol","₹6L","🚗","1.2L","89 hp","FWD","5 seats"],
+["Maruti Suzuki","Brezza","SUV","Petrol","₹8L","🚙","1.5L","103 hp","FWD","5 seats"],
+["Maruti Suzuki","Jimny","SUV","Petrol","₹12L","🛻","1.5L","103 hp","4x4","4 seats"],
+["Hyundai","Creta","SUV","Petrol","₹11L","🚙","1.5L","115 hp","FWD","5 seats"],
+["Hyundai","Venue","SUV","Petrol","₹8L","🚙","1.2L","83 hp","FWD","5 seats"],
+["Hyundai","Verna","Sedan","Petrol","₹11L","🚘","1.5L","160 hp","FWD","5 seats"],
+["Hyundai","Tucson","SUV","Diesel","₹29L","🚙","2.0L","186 hp","AWD","5 seats"],
+["Hyundai","Ioniq 5","EV","Electric","₹46L","⚡","84 kWh","325 hp","AWD","5 seats"],
+["Kia","Seltos","SUV","Petrol","₹11L","🚙","1.5L","160 hp","FWD","5 seats"],
+["Kia","Sonet","SUV","Diesel","₹8L","🚙","1.5L","115 hp","FWD","5 seats"],
+["Kia","Carnival","MPV","Diesel","₹63L","🚐","2.2L","200 hp","FWD","7 seats"],
+["Kia","EV6","EV","Electric","₹60L","⚡","77.4 kWh","321 hp","AWD","5 seats"],
+["Tata","Nexon","SUV","Petrol","₹8L","🚙","1.2L","118 hp","FWD","5 seats"],
+["Tata","Punch","SUV","Petrol","₹6L","🚙","1.2L","87 hp","FWD","5 seats"],
+["Tata","Harrier","SUV","Diesel","₹15L","🚙","2.0L","170 hp","FWD","5 seats"],
+["Tata","Safari","SUV","Diesel","₹16L","🚙","2.0L","170 hp","FWD","7 seats"],
+["Tata","Curvv EV","EV","Electric","₹18L","⚡","55 kWh","165 hp","FWD","5 seats"],
+["Mahindra","Thar","SUV","Diesel","₹12L","⛰️","2.2L","130 hp","4x4","4 seats"],
+["Mahindra","Scorpio-N","SUV","Diesel","₹14L","⛰️","2.2L","172 hp","4x4","7 seats"],
+["Mahindra","XUV700","SUV","Diesel","₹14L","🚙","2.2L","185 hp","AWD","7 seats"],
+["Mahindra","Bolero","SUV","Diesel","₹10L","🛻","1.5L","75 hp","RWD","7 seats"],
+["Honda","City","Sedan","Petrol","₹12L","🚘","1.5L","121 hp","FWD","5 seats"],
+["Honda","Elevate","SUV","Petrol","₹11L","🚙","1.5L","121 hp","FWD","5 seats"],
+["Skoda","Slavia","Sedan","Petrol","₹11L","🚘","1.5L","150 hp","FWD","5 seats"],
+["Skoda","Kodiaq","SUV","Petrol","₹40L","🚙","2.0L","190 hp","AWD","7 seats"],
+["Volkswagen","Virtus","Sedan","Petrol","₹11L","🚘","1.5L","150 hp","FWD","5 seats"],
+["Volkswagen","Taigun","SUV","Petrol","₹12L","🚙","1.5L","150 hp","FWD","5 seats"],
+["BMW","3 Series","Sedan","Petrol","₹60L","🚘","2.0L","258 hp","RWD","5 seats"],
+["BMW","5 Series","Sedan","Petrol","₹75L","🚘","2.0L","255 hp","RWD","5 seats"],
+["BMW","X5","SUV","Petrol","₹97L","🚙","3.0L","381 hp","AWD","5 seats"],
+["BMW","M3","Sports","Petrol","₹1.5Cr","🏎️","3.0L","503 hp","AWD","5 seats"],
+["Mercedes-Benz","C-Class","Sedan","Petrol","₹58L","🚘","1.5L","204 hp","RWD","5 seats"],
+["Mercedes-Benz","E-Class","Sedan","Petrol","₹78L","🚘","2.0L","204 hp","RWD","5 seats"],
+["Mercedes-Benz","G-Class","SUV","Petrol","₹2.5Cr","🧱","4.0L","577 hp","4x4","5 seats"],
+["Mercedes-Benz","AMG GT","Sports","Petrol","₹2.7Cr","🏎️","4.0L","577 hp","AWD","2 seats"],
+["Audi","A4","Sedan","Petrol","₹46L","🚘","2.0L","190 hp","FWD","5 seats"],
+["Audi","Q7","SUV","Petrol","₹90L","🚙","3.0L","340 hp","AWD","7 seats"],
+["Audi","RS5","Sports","Petrol","₹1.1Cr","🏎️","2.9L","444 hp","AWD","5 seats"],
+["Lexus","ES","Sedan","Hybrid","₹64L","🚘","2.5L","215 hp","FWD","5 seats"],
+["Lexus","LX","SUV","Diesel","₹2.8Cr","🏔️","3.3L","304 hp","4x4","7 seats"],
+["Volvo","XC60","SUV","Hybrid","₹70L","🚙","2.0L","455 hp","AWD","5 seats"],
+["Volvo","EX30","EV","Electric","₹40L","⚡","69 kWh","428 hp","AWD","5 seats"],
+["Porsche","911 Carrera","Sports","Petrol","₹2Cr","🏎️","3.0L","379 hp","RWD","4 seats"],
+["Porsche","Cayenne","SUV","Petrol","₹1.4Cr","🚙","3.0L","348 hp","AWD","5 seats"],
+["Porsche","Taycan","EV","Electric","₹1.9Cr","⚡","105 kWh","750 hp","AWD","4 seats"],
+["Ferrari","296 GTB","Supercar","Hybrid","₹5.4Cr","🏎️","3.0L V6","819 hp","RWD","2 seats"],
+["Ferrari","SF90 Stradale","Supercar","Hybrid","₹7.5Cr","🏎️","4.0L V8","986 hp","AWD","2 seats"],
+["Lamborghini","Huracán","Supercar","Petrol","₹4Cr","🏎️","5.2L V10","631 hp","AWD","2 seats"],
+["Lamborghini","Revuelto","Supercar","Hybrid","₹8.9Cr","🏎️","6.5L V12","1001 hp","AWD","2 seats"],
+["Lamborghini","Urus","SUV","Petrol","₹4.2Cr","🚙","4.0L V8","657 hp","AWD","5 seats"],
+["McLaren","750S","Supercar","Petrol","₹5.9Cr","🏎️","4.0L V8","740 hp","RWD","2 seats"],
+["McLaren","Artura","Supercar","Hybrid","₹5Cr","🏎️","3.0L V6","671 hp","RWD","2 seats"],
+["Aston Martin","Vantage","Sports","Petrol","₹3Cr","🏎️","4.0L V8","656 hp","RWD","2 seats"],
+["Aston Martin","DB12","Sports","Petrol","₹4Cr","🏎️","4.0L V8","671 hp","RWD","4 seats"],
+["Bentley","Continental GT","Coupe","Petrol","₹5.2Cr","🏎️","4.0L V8","771 hp","AWD","4 seats"],
+["Bentley","Bentayga","SUV","Petrol","₹5Cr","🚙","4.0L V8","542 hp","AWD","5 seats"],
+["Rolls-Royce","Ghost","Sedan","Petrol","₹8Cr","🚘","6.75L V12","563 hp","AWD","5 seats"],
+["Rolls-Royce","Phantom","Sedan","Petrol","₹10Cr","🚘","6.75L V12","563 hp","AWD","5 seats"],
+["Rolls-Royce","Cullinan","SUV","Petrol","₹7Cr","🚙","6.75L V12","563 hp","AWD","5 seats"],
+["Bugatti","Chiron","Hypercar","Petrol","₹19Cr","🏎️","8.0L W16","1479 hp","AWD","2 seats"],
+["Bugatti","Tourbillon","Hypercar","Hybrid","₹36Cr","🏎️","8.3L V16","1800 hp","AWD","2 seats"],
+["Koenigsegg","Jesko","Hypercar","Petrol","₹25Cr","🏎️","5.0L V8","1281 hp","RWD","2 seats"],
+["Pagani","Huayra","Hypercar","Petrol","₹25Cr","🏎️","6.0L V12","827 hp","RWD","2 seats"],
+["Tesla","Model 3","EV","Electric","₹45L","⚡","75 kWh","498 hp","AWD","5 seats"],
+["Tesla","Model Y","EV","Electric","₹50L","⚡","75 kWh","455 hp","AWD","5 seats"],
+["Tesla","Model S","EV","Electric","₹90L","⚡","100 kWh","1020 hp","AWD","5 seats"],
+["Ford","Mustang","Sports","Petrol","₹75L","🏎️","5.0L V8","480 hp","RWD","4 seats"],
+["Ford","F-150 Raptor","Pickup","Petrol","₹1Cr","🛻","3.5L V6","450 hp","4x4","5 seats"],
+["Jeep","Wrangler","SUV","Petrol","₹70L","⛰️","2.0L","268 hp","4x4","5 seats"],
+["Jeep","Grand Cherokee","SUV","Petrol","₹80L","⛰️","2.0L","268 hp","4x4","5 seats"],
+["Nissan","GT-R","Sports","Petrol","₹2.1Cr","🏎️","3.8L V6","565 hp","AWD","4 seats"],
+["Nissan","X-Trail","SUV","Petrol","₹50L","🚙","1.5L","161 hp","AWD","7 seats"],
+["Land Rover","Defender","SUV","Petrol","₹1Cr","⛰️","3.0L","394 hp","AWD","7 seats"],
+["Range Rover","Sport","SUV","Petrol","₹1.6Cr","🚙","3.0L","394 hp","AWD","5 seats"],
+["Jaguar","F-Pace","SUV","Petrol","₹74L","🚙","2.0L","247 hp","AWD","5 seats"],
+["Mitsubishi","Pajero Sport","SUV","Diesel","₹40L","⛰️","2.4L","181 hp","4x4","7 seats"],
+["Isuzu","D-Max","Pickup","Diesel","₹22L","🛻","1.9L","150 hp","4x4","5 seats"],
+["MG","Hector","SUV","Petrol","₹14L","🚙","1.5L","143 hp","FWD","5 seats"],
+["MG","ZS EV","EV","Electric","₹19L","⚡","50 kWh","174 hp","FWD","5 seats"],
+["BYD","Seal","EV","Electric","₹42L","⚡","82.5 kWh","530 hp","AWD","5 seats"],
+["BYD","Atto 3","EV","Electric","₹25L","⚡","60 kWh","201 hp","FWD","5 seats"],
+["Citroen","C3","Hatchback","Petrol","₹6L","🚗","1.2L","81 hp","FWD","5 seats"],
+["Renault","Kiger","SUV","Petrol","₹6L","🚙","1.0L","99 hp","FWD","5 seats"],
+["Mini","Cooper S","Hatchback","Petrol","₹44L","🚗","2.0L","201 hp","FWD","4 seats"],
+["Mini","Countryman","SUV","Petrol","₹48L","🚙","2.0L","201 hp","AWD","5 seats"],
+["Subaru","WRX","Sports","Petrol","₹50L","🏎️","2.4L","271 hp","AWD","5 seats"],
+["Chevrolet","Corvette Stingray","Sports","Petrol","₹1.5Cr","🏎️","6.2L V8","490 hp","RWD","2 seats"],
+["Dodge","Challenger","Sports","Petrol","₹80L","🏎️","6.4L V8","485 hp","RWD","5 seats"],
+["Ram","1500 TRX","Pickup","Petrol","₹1.2Cr","🛻","6.2L V8","702 hp","4x4","5 seats"],
+["GMC","Hummer EV","Pickup","Electric","₹2Cr","⚡","205 kWh","1000 hp","4x4","5 seats"]
+];
+
+const $=id=>document.getElementById(id);
+function render(){
+ let q=$("search").value.toLowerCase().trim(), type=$("type").value, fuel=$("fuel").value, sort=$("sort").value;
+ let list=cars.filter(c=>(!q||c.join(" ").toLowerCase().includes(q))&&(!type||c[2]===type)&&(!fuel||c[3]===fuel));
+ if(sort==="brand") list.sort((a,b)=>a[0].localeCompare(b[0]));
+ else if(sort==="price") list.sort((a,b)=>parseFloat(a[4].replace(/[₹,CrL]/g,""))-parseFloat(b[4].replace(/[₹,CrL]/g,"")));
+ else list.sort((a,b)=>(a[0]+" "+a[1]).localeCompare(b[0]+" "+b[1]));
+ $("grid").innerHTML=list.map((c,i)=>`<article class="car" data-query="${c[0]} ${c[1]}" onclick='openCar(${JSON.stringify(c)})'><div class="visual"><span class="photo-fallback">${c[5]}</span></div><div class="carbody"><div class="brand">${c[0]}</div><h3>${c[1]}</h3><div class="meta"><span class="tag">${c[2]}</span><span class="tag">${c[3]}</span><span class="tag">${c[7]}</span></div><div class="price">${c[4]} <small>starting*</small></div></div></article>`).join("");
+ $("empty").style.display=list.length?"none":"block"; $("shown").textContent=`Showing ${list.length} of ${cars.length} cars`;
+}
+async function getCarPhoto(brand,model){
+ try{const q=encodeURIComponent(brand+" "+model);const r=await fetch(`https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${q}&gsrnamespace=0&gsrlimit=5&prop=pageimages&piprop=thumbnail&pithumbsize=900&format=json&origin=*`);const d=await r.json();const pages=d.query&&d.query.pages?Object.values(d.query.pages):[];const page=pages.find(x=>x.thumbnail&&x.thumbnail.source)||pages[0];return page&&page.thumbnail?page.thumbnail.source:null}catch(e){return null}}
+async function loadPhotos(){
+ const cards=[...document.querySelectorAll('.car')];
+ const io=new IntersectionObserver(async entries=>{for(const entry of entries){if(!entry.isIntersecting)continue;const card=entry.target;io.unobserve(card);const parts=card.dataset.query.split(' '),brand=parts.shift(),model=parts.join(' ');const src=await getCarPhoto(brand,model);if(src)card.querySelector('.visual').innerHTML=`<img src="${src}" alt="${card.dataset.query}" loading="lazy">`;}},{rootMargin:'500px'});cards.forEach(c=>io.observe(c));}
+async function openCar(c){
+ const src=await getCarPhoto(c[0],c[1]);
+
+ $("details").innerHTML=`<div class="detailhero">${src?`<img src="${src}" alt="${c[0]} ${c[1]}" style="width:100%;height:280px;object-fit:cover;border-radius:12px">`:c[5]}</div><div class="brand">${c[0]}</div><h2>${c[1]}</h2><p style="color:#9da8b7">${c[2]} • ${c[3]} • ${c[4]} approx.</p><div class="specs">
+<div class="spec"><b>ENGINE / BATTERY</b>${c[6]}</div><div class="spec"><b>POWER</b>${c[7]}</div>
+<div class="spec"><b>DRIVETRAIN</b>${c[8]}</div><div class="spec"><b>SEATING</b>${c[9]}</div>
+</div><p style="color:#9da8b7;font-size:12px;margin-top:18px">*Specifications and prices are representative and may differ by market, variant and model year.</p>`;
+ $("modal").classList.add("show");
+}
+function closeModal(){$("modal").classList.remove("show")}
+function resetFilters(){$("search").value="";$("type").value="";$("fuel").value="";$("sort").value="name";render()}
+$("search").addEventListener("input",render);
+$("count").textContent=cars.length;
+$("brands").textContent=new Set(cars.map(c=>c[0])).size;
+render();
+loadPhotos();
+</script>
+</body>
+</html>
